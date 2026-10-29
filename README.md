@@ -112,9 +112,9 @@ La aplicación cubre reservas y gestión de mesas. No incluye pagos bancarios re
 
 ## Integrantes
 
-- Amadeo Eusebio Moisés Cárdenas Palomino
-- Integrante 2: completar
-- Integrante 3: completar
+- Moisés Cárdenas Palomino
+- Efrain Frank Asto Mendoza
+- Gabriel Stefano Mija Ruiz
 
 ## Evidencias relacionadas
 
