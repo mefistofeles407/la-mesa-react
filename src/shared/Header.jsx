@@ -1,0 +1,1 @@
+export function Header({rol,onCliente,onAdmin,onInicio}){return <header className="topbar"><button className="brand" onClick={onInicio}>La Mesa</button><nav><button className={rol==='cliente'?'active':''}onClick={onCliente}>Cliente</button><button className={rol==='admin'?'active':''}onClick={onAdmin}>Administración</button></nav></header>}

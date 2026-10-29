@@ -1,0 +1,16 @@
+import{useEffect,useState}from'react'
+import{mesasIniciales,reclamacionDemo,reservaDemo}from'../data/initialData'
+const leer=(k,i)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):i}catch{return i}}
+export function useAppData(setMensaje){
+const[reservas,setReservas]=useState(()=>leer('la-mesa-reservas',[reservaDemo]));const[mesas,setMesas]=useState(()=>leer('la-mesa-mesas',mesasIniciales));const[reclamaciones,setReclamaciones]=useState(()=>leer('la-mesa-reclamaciones',[reclamacionDemo]));
+useEffect(()=>localStorage.setItem('la-mesa-reservas',JSON.stringify(reservas)),[reservas]);useEffect(()=>localStorage.setItem('la-mesa-mesas',JSON.stringify(mesas)),[mesas]);useEffect(()=>localStorage.setItem('la-mesa-reclamaciones',JSON.stringify(reclamaciones)),[reclamaciones]);
+const disponible=(id,fecha,hora,ignorar='')=>{const m=mesas.find(x=>x.id===id);return m&&!m.bloqueada&&!m.ocupada&&!reservas.some(x=>x.codigo!==ignorar&&x.estado==='Activa'&&x.fecha===fecha&&x.hora===hora&&x.mesas.includes(id))}
+const crearReserva=s=>{const mayor=reservas.reduce((a,x)=>Math.max(a,Number(x.codigo.replace('RSV-',''))||0),1026),codigo=`RSV-${mayor+1}`;setReservas(x=>[...x,{...s,codigo,contacto:s.correo||s.telefono,adelanto:s.mesas.length*100,estado:'Activa',reembolso:null}]);setMensaje(`Reserva ${codigo} confirmada correctamente.`);return codigo}
+const cancelarReserva=c=>{setReservas(xs=>xs.map(x=>x.codigo===c?{...x,estado:'Cancelada',reembolso:x.reembolso||'Disponible'}:x));setMensaje(`Reserva ${c} cancelada correctamente.`)}
+const solicitarReembolso=c=>{setReservas(xs=>xs.map(x=>x.codigo===c?{...x,reembolso:'Pendiente'}:x));setMensaje(`Solicitud de reembolso para ${c} enviada correctamente.`)}
+const procesarReembolso=c=>{setReservas(xs=>xs.map(x=>x.codigo===c?{...x,reembolso:'Procesado'}:x));setMensaje(`Reembolso de ${c} procesado correctamente.`)}
+const modificarReserva=(codigo,cambios)=>{if(cambios.mesas.some(id=>!disponible(id,cambios.fecha,cambios.hora,codigo)))return{ok:false,mensaje:'Conflicto: una mesa no está disponible en esa fecha y hora.'};setReservas(xs=>xs.map(x=>x.codigo===codigo?{...x,...cambios,adelanto:cambios.mesas.length*100}:x));setMensaje(`Reserva ${codigo} actualizada correctamente.`);return{ok:true}}
+const enviarReclamacion=f=>{const codigo=`REC-${String(reclamaciones.length+1).padStart(3,'0')}`;setReclamaciones(xs=>[...xs,{...f,codigo,reserva:f.reserva||'Sin reserva',estado:'Recibida',fecha:new Date().toISOString().slice(0,10)}]);setMensaje(`Reclamación ${codigo} recibida correctamente.`)}
+const avanzarReclamacion=c=>{const n={Recibida:'En revisión','En revisión':'Resuelta',Resuelta:'Resuelta'};setReclamaciones(xs=>xs.map(x=>x.codigo===c?{...x,estado:n[x.estado]}:x));setMensaje(`Estado de ${c} actualizado.`)}
+const alternarBloqueo=id=>{setMesas(xs=>xs.map(x=>x.id===id?{...x,bloqueada:!x.bloqueada}:x));setMensaje(`Bloqueo de ${id} actualizado.`)};const alternarOcupacion=id=>{setMesas(xs=>xs.map(x=>x.id===id?{...x,ocupada:!x.ocupada}:x));setMensaje(`Estado físico de ${id} actualizado.`)}
+return{reservas,mesas,reclamaciones,disponible,crearReserva,cancelarReserva,solicitarReembolso,procesarReembolso,modificarReserva,enviarReclamacion,avanzarReclamacion,alternarBloqueo,alternarOcupacion}}
